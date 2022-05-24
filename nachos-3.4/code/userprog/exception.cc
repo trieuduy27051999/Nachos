@@ -53,13 +53,13 @@ ExceptionHandler(ExceptionType which)
 {
     int type = machine->ReadRegister(2);
 
-    if ((which == SyscallException) && (type == SC_Halt)) {
+    /*if ((which == SyscallException) && (type == SC_Halt)) {
 	DEBUG('a', "Shutdown, initiated by user program.\n");
    	interrupt->Halt();
     } else {
 	printf("Unexpected user mode exception %d %d\n", which, type);
 	ASSERT(FALSE);
-	}
+	}*/
     switch (which){
     case NoException: 
       {
@@ -68,27 +68,32 @@ ExceptionHandler(ExceptionType which)
     case PageFaultException:
       {
 	printf("No valid translation found.\n");
+	interrupt->Halt();
 	break;
       }
     case ReadOnlyException:
       {
 	printf("Write attemped to page marked ""read-only"".\n");
+	interrupt->Halt();
 	break;
       }
     case BusErrorException:
       {
 	printf("Translation resulted in an invalid physical adddress.\n");
+	interrupt->Halt();
         break;
       }
     case AddressErrorException:
       {
 	printf("Unaligned reference or one that\n");
 	printf("was beyond the end of the address space.\n");
+	interrupt->Halt();
 	break;
       }
     case OverflowException:
       {
 	printf("Integer overflow in add or sub.\n");
+	interrupt->Halt();
 	break;
       }
     case SyscallException:
