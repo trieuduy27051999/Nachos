@@ -59,5 +59,86 @@ ExceptionHandler(ExceptionType which)
     } else {
 	printf("Unexpected user mode exception %d %d\n", which, type);
 	ASSERT(FALSE);
+	}
+    switch (which){
+    case NoException: 
+      {
+	return;
+      }
+    case PageFaultException:
+      {
+	printf("No valid translation found.\n");
+	break;
+      }
+    case ReadOnlyException:
+      {
+	printf("Write attemped to page marked ""read-only"".\n");
+	break;
+      }
+    case BusErrorException:
+      {
+	printf("Translation resulted in an invalid physical adddress.\n");
+        break;
+      }
+    case AddressErrorException:
+      {
+	printf("Unaligned reference or one that\n");
+	printf("was beyond the end of the address space.\n");
+	break;
+      }
+    case OverflowException:
+      {
+	printf("Integer overflow in add or sub.\n");
+	break;
+      }
+    case SyscallException:
+      {
+	switch(type){
+	case SC_Halt:
+	  {
+	    break;
+	  }
+	case SC_Exit:
+	  {
+	    break;
+	  }
+	case SC_Exec:
+	  {
+	    break;
+	  }
+	case SC_Join:
+	  {
+	    break;
+	  }
+	case SC_Create:
+	  {
+	    break;
+	  }
+	case SC_Open:
+	  {
+	    break;
+	  }
+	case SC_Read:
+	  {
+	    break;
+	  }
+	case SC_Write:
+	  {
+	    break;
+	  }
+	case SC_Close:
+	  {
+	    break;
+	  }
+	case SC_Fork:
+	  {
+	    break;
+	  }
+	case SC_Yeild:
+	  {
+	    break;
+	  }
+	}
+      }
     }
 }
