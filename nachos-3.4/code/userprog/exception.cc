@@ -153,124 +153,190 @@ void ExceptionHandler(ExceptionType which)
 	case SyscallException:
 		switch (type) {
 
-		case SC_Halt:
-		{
-			printf("\nShutdown, initiated by user program.\n");
-			interrupt->Halt();
-			return;
-		}
-		case SC_ReadInt:
-		{
-
-            char * buffer = NULL;
-            buffer = new char[MAX_LENGTH +1];
-
-			int lenOfNumber = gSynchConsole->Read(buffer,MAX_LENGTH);
-			int firstIndex = 0;
-			bool isNeg = false;
-			if(buffer[0] == '-'){
-                firstIndex = 1;
-                isNeg =true;
-			}
-			for(int i=firstIndex; i<lenOfNumber; i++)
-                {
-                    if(buffer[i]<'0'||buffer[i]>'9'){
-                        printf("This is not a valid number!!");
-                        machine->WriteRegister(2,0);
-                        IncreasePC();
-                        delete buffer;
-                        break;
-                    }
-                }
-            int number =0;
-            for(int i = firstIndex;i<lenOfNumber;i++){
-                number =number*10 + int(buffer[i]-48);
-            }
-            if (isNeg) number = number*-1;
-            machine->WriteRegister(2,number);
-            printf("Read number successfull!");
-            IncreasePC();
-            delete buffer;
-			break;
-
-		}
-		case SC_PrintInt:
-		{
-
-            int number=0;
-            number = machine->ReadRegister(4);
-            if (number==0)
+            case SC_Halt:
             {
-                gSynchConsole->Write("0",1);
-                IncreasePC();
+                printf("\nShutdown, initiated by user program.\n");
+                interrupt->Halt();
                 return;
             }
-            bool isNeg=false;
-            int Numlen = 0;
-            int firstIndex =0;
-
-            if(number< 0){
-                isNeg =true;
-                firstIndex =1;
-                number = number *-1;
-
-            }
-            int temp = number;
-            while(temp>0){
-                Numlen++;
-                temp/=10;
-            }
-            char* buffer = new char [MAX_LENGTH+1];
-            for (int i = firstIndex + Numlen -1; i>= firstIndex; i--)
+            case SC_ReadInt:
             {
-                buffer[i]=(char)((number%10)+48);
-                number/=10;
+                // Dau vao: void
+                //Dau ra : tra ve mot so nguyen
+                //Muc dich: Doc mot so nguyen tu console.
+
+                char * buffer = NULL;  // Mang ki tu luu tru cac chu so cua so nguyen nhan duoc.
+                buffer = new char[MAX_LENGTH +1];// do dai toi da la 255 chu so
+
+                int lenOfNumber = gSynchConsole->Read(buffer,MAX_LENGTH);// so ki tu doc duoc tu console
+                int firstIndex = 0;
+                bool isNeg = false;
+                if(buffer[0] == '-'){
+                    firstIndex = 1;
+                    isNeg =true;  // Neu la so am thi doc tu phan tu thu 1
+                }
+                for(int i=firstIndex; i<lenOfNumber; i++)//Kiem tra xem so co hop le khong, neu khong tra ve 0
+                    {
+                        if(buffer[i]<'0'||buffer[i]>'9'){
+                            printf("So da nhap khong hop le!!");
+                            machine->WriteRegister(2,0);
+                            IncreasePC();
+                            delete buffer;
+                            //interrupt->Halt();
+                            break;
+                        }
+                    }
+                int number =0;
+                for(int i = firstIndex;i<lenOfNumber;i++){ // Chuyen day ki tu thanh so
+                    number =number*10 + int(buffer[i]-48);
+                }
+                if (isNeg) number = number*-1;
+                machine->WriteRegister(2,number); //Ghi ra thanh ghi so 2 gia tri number
+                //printf("Read number successfull!");
+                IncreasePC();
+                delete buffer;
+                //interrupt->Halt();
+                break;
+
+
             }
-            if(isNeg)
+            case SC_PrintInt:
             {
-                buffer[0]='-';
-                buffer[Numlen+1]='\0';
-                gSynchConsole->Write(buffer,Numlen+1);
+                //Dau vao: Mot so nguyen
+                //Dau ra: Khong
+                //Muc dich: In so nguyen ra console
+                int number=0;
+                number = machine->ReadRegister(4); // Doc so can tu ghi tu thanh ghi so 4
+                if (number==0)
+                {
+                    gSynchConsole->Write("0",1); // Ghi ra so 0
+                    IncreasePC();
+                    break;
+                }
+                bool isNeg=false;
+                int Numlen = 0;  // So chu so cua so nguyen can in.
+                int firstIndex =0;
+
+                if(number< 0){ //Neu so nguyen < 0 thi ki tu dau tien cua chuoi in ra la '-'
+                    isNeg =true;
+                    firstIndex =1;
+                    number = number *-1;
+
+                }
+                int temp = number; // Dem so chu so cua so nguyen
+                while(temp>0){
+                    Numlen++;
+                    temp/=10;
+                }
+                char* buffer = new char [MAX_LENGTH+1]; // Mang luu so nguyen dang chuoi
+                for (int i = firstIndex + Numlen -1; i>= firstIndex; i--)// Chuyen so nguyen thanh chuoi
+                {
+                    buffer[i]=(char)((number%10)+48);
+                    number/=10;
+                }
+                if(isNeg)//Neu la so am thi ki tu dau tien la '-'
+                {
+                    buffer[0]='-';
+                    buffer[Numlen+1]='\0';
+                    gSynchConsole->Write(buffer,Numlen+1);//In chuoi so nguyen ra man hinh console
+                    //printf("Print Int Successful!");
+                    delete buffer;
+                    IncreasePC();
+                    //interrupt->Halt();
+                    break;
+                }
+                buffer[Numlen]='\0';//
+                gSynchConsole->Write(buffer,Numlen);
+                //printf("Print Int Successful!");
+                delete buffer;
+
+                IncreasePC();
+                //interrupt->Halt();
+                break;
+
+
+            }
+            case SC_ReadChar:
+            {
+                //Dau vao: khong
+                //Dau ra: 1 ki tu.
+                //Chuc Nang: Doc 1 ki tu tu console
+                char * buffer = NULL;//Chuoi luu gia tri doc duoc tu console voi do dai toi da 255 ki tu
+                buffer = new char[MAX_LENGTH +1];
+
+                int lenOfBuffer = gSynchConsole->Read(buffer,MAX_LENGTH); //So ki tu doc duoc tu console
+
+                if(lenOfBuffer== 0){//Neu khong doc duoc ki tu nao
+                    printf("Ki tu rong!");
+                    machine->WriteRegister(2,0);
+                    break;
+                }
+                if(lenOfBuffer> 1){//Neu doc duoc nhieu hon 1 ki tu
+                    printf("Chi duoc nhap mot ki tu !");
+                    machine->WriteRegister(2,0);
+                    break;
+                }
+
+
+                char c = buffer[0];
+                machine->WriteRegister(2,c); // Ghi ki tu doc duoc xuong thanh ghi so 2.
+                printf("Read char successful!");
+                delete buffer;
+                interrupt->Halt();
+                break;
+            }
+            case SC_PrintChar:
+            {
+                //Dau vao : 1 ki tu kieu char
+                //Dau ra: Khong
+                //Chuc Nang:In mot ki tu ra console
+                char ch;
+                ch = (char) machine->ReadRegister(4);//Lay ki tu can in ra console tu thanh ghi so 4
+                gSynchConsole->Write(&ch, 1);//In ki tu ra console
+                //printf("\n Print char successful!");
+                IncreasePC();
+                //interrupt->Halt();
+                break;
+            }
+            case SC_ReadString:
+            {
+                //Dau vao: Chuoi buffer luu gia tri doc duoc, do dai chuoi can doc
+                //Dau ra: Khong
+                //Chuc nang: Doc chuoi tu man hinh console
+                char * buffer;
+                int len, virtAdd; //
+                virtAdd = machine->ReadRegister(4);//Lay dia chi tu thanh ghi so 4
+                len = machine->ReadRegister(5);// lay do dai ki tu toi da tu thanh ghi so 5
+                buffer = User2System(virtAdd,len);// copy chuoi tu vung nho user sang vung nho system
+                gSynchConsole->Read(buffer,len);//Doc chuoi ki tu tu console
+                System2User(virtAdd,len,buffer);//Copy chuoi tu vung nho System sang vung nho User
+                //printf("Read String successful!");
+                delete buffer;
+                //interrupt->Halt();
+                IncreasePC();
+                break;
+            }
+            case SC_PrintString:
+            {
+                //Dau vao: Chuoi ki tu can in ra console
+                //Dau ra : khong
+                //Muc dich: In chuoi ki tu ra console
+                char * buffer;
+                int len, virtAdd;
+                virtAdd = machine->ReadRegister(4); // Doc dia chi tu thanh ghi so 4
+                len = 0;
+
+                buffer = User2System(virtAdd,MAX_LENGTH);//Copy chuoi tu vung nho user sang vung nho system
+                while(buffer[len]!= '\0') len++;// Dem so luong ki tu cua chuoi
+                gSynchConsole->Write(buffer,len+1);//In chuoi ki tu ra console
                 delete buffer;
                 IncreasePC();
-                return;
+                //interrupt->Halt();
+
             }
-            buffer[Numlen]='\0';
-            gSynchConsole->Write(buffer,Numlen);
-            delete buffer;
-            IncreasePC();
-            return;
 
 
-		}
-		case SC_ReadChar:
-		{
-
-			break;
-		}
-		case SC_PrintChar:
-		{
-			char ch;
-			ch = (char) machine->ReadRegister(4);
-			gSynchConsole->Write(&ch, 1);
-			break;
-		}
-		case SC_ReadString:
-		{
-
-			break;
-		}
-		case SC_PrintString:
-		{
-			char ch;
-			ch = (char) machine->ReadRegister(4);
-			gSynchConsole->Write(&ch, 1);
-			break;
-		}
-
-		IncreasePC();
-		break;
-	}
+	    }
 	}
 
 
