@@ -24,7 +24,7 @@
 #include "copyright.h"
 #include "system.h"
 #include "syscall.h"
-
+#define MaxFileLength = 32
 //----------------------------------------------------------------------
 // ExceptionHandler
 // 	Entry point into the Nachos kernel.  Called when a user program
@@ -48,6 +48,51 @@
 //	are in machine.h.
 //----------------------------------------------------------------------
 
+//User to System
+//Input: user space address -  int, limit of buffer - int
+//Output: buffer - char*
+// use to copy buffer from user memory space to system memory space
+
+char* User2System(int virtAddr, int limit)
+{
+  int i;
+  int oneChar;
+  char* kernelBuf = NULL;
+  kernelBuf = new char[limit+1]; //need for ter string
+  if(kernelBuf==NULL)
+    return kernelBuf;
+  memset(kernelBuf,0,limit+1);
+  for (i=0;i<limit;i++)
+    {
+      machine->ReadMem(virtAddr+i,1,&oneChar);
+      kernelBuf[i]=(char)oneChar;
+      if(oneChar==0)
+	break;
+    }
+  return kernelBuf;
+}
+
+//System to User
+//Input: user space address - int, limit of buffer - int
+//buffer - char[]
+//output: number of bytes copied - int
+//use to copy buffer from system memory space to user memory space
+
+int System2User(int virtAddr, int len, char* buffer)
+{
+  if(len<0)return -1;
+  if(len==0)return len;
+  int i=0;
+  int oneChar=0;
+  do{
+    oneChar=(int)buffer[i];
+    machine->WriteMem(virtAddr+i,1,oneChar);
+    i++;
+  }while(i<len&&oneChar!=0);
+  return i;
+}
+
+
 void
 ExceptionHandler(ExceptionType which)
 {
@@ -63,37 +108,50 @@ ExceptionHandler(ExceptionType which)
     switch (which){
     case NoException: 
       {
+	interrupt->Halt();
 	return;
       }
     case PageFaultException:
       {
 	printf("No valid translation found.\n");
-	interrupt->Halt();
+	ASSERT(FALSE);
 	break;
       }
     case ReadOnlyException:
       {
-	printf("Write attemped to page marked ""read-only"".\n");
-	interrupt->Halt();
+	printf("Write attemped to page marked \"read-only\".\n");
+	ASSERT(FALSE)
 	break;
       }
     case BusErrorException:
       {
 	printf("Translation resulted in an invalid physical adddress.\n");
-	interrupt->Halt();
+        ASSERT(FALSE);
         break;
       }
     case AddressErrorException:
       {
 	printf("Unaligned reference or one that\n");
 	printf("was beyond the end of the address space.\n");
-	interrupt->Halt();
+	ASSERT(FALSE);
 	break;
       }
     case OverflowException:
       {
 	printf("Integer overflow in add or sub.\n");
-	interrupt->Halt();
+	ASSERT(FALSE);
+	break;
+      }
+    case IllegalInstrException:
+      {
+	printf("Unimplemented or reserved instr\n");
+	ASSERT(FALSE);
+	break;
+      }
+    case NumExceptionTypes:
+      {
+	printf("NumExceptionTypes\n");
+	ASSERT(FALSE);
 	break;
       }
     case SyscallException:
@@ -101,6 +159,8 @@ ExceptionHandler(ExceptionType which)
 	switch(type){
 	case SC_Halt:
 	  {
+	    interrupt->Halt();
+	    printf("Shutdown, initiated by user program.\n");
 	    break;
 	  }
 	case SC_Exit:
@@ -117,6 +177,17 @@ ExceptionHandler(ExceptionType which)
 	  }
 	case SC_Create:
 	  {
+	    int virtAddr;
+	    char* filename;
+
+	    DEBUG('a',"\n SC_Create call...");
+	    DEBUG('a',"\n Reading virtual address of filename");
+	    virtAddr = machine->ReadRegister(4);
+	    DEBUG('a',"\nReading filename");
+	    //maxfilelength = 32
+	    filename=User2System(virtAddr,MaxFileLength+1);
+	    if(filename==NULL)
+	      {}
 	    break;
 	  }
 	case SC_Open:
@@ -144,6 +215,12 @@ ExceptionHandler(ExceptionType which)
 	    break;
 	  }
 	}
+      default:
+	{
+	  printf("Unexpected user mode exception (%d %d)", which, type);
+	  interrupt->Halt();
+	}
       }
     }
+    return;
 }
